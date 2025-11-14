@@ -21,6 +21,12 @@ pub fn build(b: *std.Build) void {
     // target and optimize options) will be listed when running `zig build --help`
     // in this directory.
 
+    // DEPS
+    const clap_dep = b.dependency("clap", .{
+        .url = "https://github.com/Hejsil/zig-clap/archive/refs/tags/0.11.0.tar.gz",
+        .hash = "clap-0.11.0-oBajB-HnAQDPCKYzwF7rO3qDFwRcD39Q0DALlTSz5H7e",
+    });
+
     // This creates a module, which represents a collection of source files alongside
     // some compilation options, such as optimization mode and linked system libraries.
     // Zig modules are the preferred way of making Zig code available to consumers.
@@ -73,14 +79,14 @@ pub fn build(b: *std.Build) void {
             .optimize = optimize,
             // List of modules available for import in source files part of the
             // root module.
-            //.imports = &.{
-            // Here "git_add" is the name you will use in your source code to
-            // import this module (e.g. `@import("git_add")`). The name is
-            // repeated because you are allowed to rename your imports, which
-            // can be extremely useful in case of collisions (which can happen
-            // importing modules from different packages).
-            //.{ .name = "git_add" },
-            //},
+            .imports = &.{
+                // Here "git_add" is the name you will use in your source code to
+                // import this module (e.g. `@import("git_add")`). The name is
+                // repeated because you are allowed to rename your imports, which
+                // can be extremely useful in case of collisions (which can happen
+                // importing modules from different packages).
+                .{ .name = "clap", .module = clap_dep.module("clap") },
+            },
         }),
     });
 
