@@ -50,7 +50,7 @@ pub fn main() !void {
     defer res.deinit();
 
     const allocator = gpa.allocator();
-    const programParams: *ProgramParams = try allocator.create(ProgramParams);
+    const programParams: *ProgramParams = try gpa.allocator().create(ProgramParams);
     defer allocator.destroy(programParams); // deallocate when exit this scope
 
     handleParams(res, programParams);
@@ -62,11 +62,13 @@ pub fn main() !void {
     std.debug.print("Help: {any} \n", .{programParams.help});
     std.debug.print("Version: {any} \n", .{programParams.version});
 
+    // Prints if program works.
     // Prints to stderr, ignoring potential errors.
     std.debug.print("All your {s} are belong to us.\n", .{"codebase"});
 }
 
 // @Requires res = clap.Result(Help)
+// Handle command params. Executing -h and -v and parsing to apropriate struct.
 pub fn handleParams(res: anytype, paramsStruct: *ProgramParams) void {
     // Show help/version and exit right after
     if (res.args.help != 0) {
@@ -109,13 +111,13 @@ fn versionStr() []const u8 {
     return "git-add version " ++ PROGRAM_VERSION;
 }
 
-// Show Command Help String
+// Show Command Help String and exit program
 fn showHelp() void {
     std.log.info("\n" ++ helpStr(), .{});
     std.process.exit(0);
 }
 
-// Show Command Version String
+// Show Command Version String and exit program
 fn showVersion() void {
     std.log.info("\n" ++ versionStr(), .{});
     std.process.exit(0);
