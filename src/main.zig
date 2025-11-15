@@ -1,6 +1,8 @@
 const std = @import("std");
 const clap = @import("clap");
 
+const PROGRAM_VERSION = "0.0.1";
+
 const ProgramParams = struct {
     paths: []const []const u8,
     help: bool = undefined,
@@ -29,7 +31,12 @@ pub fn main() !void {
     var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
 
-    const params = comptime clap.parseParamsComptime("\n\n-h, --help                  Displays this help and exit.\n-v, --version               Displays program version.\n-i, --ignore <str>...           Ignore a listed command given its name.\n-o, --options <str>...      Use git add options.\n<str>...                    Paths to be passed to actual git add command.\n");
+    const params = comptime clap.parseParamsComptime("\n\n" ++
+        "-h, --help                  Displays this help and exit.\n" ++
+        "-v, --version               Displays program version.\n" ++
+        "-i, --ignore <str>...       Ignore a listed command given its name.\n" ++
+        "-o, --options <str>...      Use git add options.\n" ++
+        "<str>...                    Paths to be passed to actual git add command.\n");
 
     var diag = clap.Diagnostic{};
     var res = clap.parse(clap.Help, &params, clap.parsers.default, .{
@@ -61,20 +68,23 @@ pub fn main() !void {
 
 // @Requires res = clap.Result(Help)
 pub fn handleParams(res: anytype, paramsStruct: *ProgramParams) void {
+    // Show help/version and exit right after
+    if (res.args.help != 0) {
+        showHelp();
+        // show help
+    }
+    if (res.args.version != 0) {
+        showVersion();
+        // show version
+    }
+
     if (res.positionals[0].len == 0) {
         @panic("Required param '<path>...' (git add <path>...) not found! exiting...");
     }
 
+    // Use .positionals[0] to unwrap pos params from unnecessary tuple.
     paramsStruct.* = ProgramParams.init(res.positionals[0], false, false, null, null);
 
-    if (res.args.help != 0) {
-        paramsStruct.help = true;
-        // show help
-    }
-    if (res.args.version != 0) {
-        paramsStruct.version = true;
-        // show version
-    }
     if (res.args.ignore.len > 0) {
         paramsStruct.ignore = res.args.ignore;
         // set ignore
@@ -83,4 +93,30 @@ pub fn handleParams(res: anytype, paramsStruct: *ProgramParams) void {
         paramsStruct.options = res.args.options;
         // set git add options
     }
+}
+
+fn helpStr() []const u8 {
+    return "USAGE: git-add [options] <paths>..." ++
+        "\n\n" ++
+        "-h, --help                  Displays this help and exit.\n" ++
+        "-v, --version               Displays program version.\n" ++
+        "-i, --ignore <str>...       Ignore a listed command given its name.\n" ++
+        "-o, --options <str>...      Use git add options.\n" ++
+        "<str>...                    Paths to be passed to actual git add command.\n";
+}
+
+fn versionStr() []const u8 {
+    return "git-add version " ++ PROGRAM_VERSION;
+}
+
+// Show Command Help String
+fn showHelp() void {
+    std.log.info("\n" ++ helpStr(), .{});
+    std.process.exit(0);
+}
+
+// Show Command Version String
+fn showVersion() void {
+    std.log.info("\n" ++ versionStr(), .{});
+    std.process.exit(0);
 }
