@@ -1,7 +1,9 @@
 const std = @import("std");
 const clap = @import("clap");
+const ini = @import("ini");
 
 const PROGRAM_VERSION = "0.0.1";
+const CONF_FILE_PATH = "git-add.conf";
 
 const ProgramParams = struct {
     paths: []const []const u8,
@@ -31,6 +33,7 @@ pub fn main() !void {
     var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
 
+    // HANDLE command params
     const params = comptime clap.parseParamsComptime("\n\n" ++
         "-h, --help                  Displays this help and exit.\n" ++
         "-v, --version               Displays program version.\n" ++
@@ -55,12 +58,14 @@ pub fn main() !void {
 
     handleParams(res, programParams);
 
-    std.debug.print("ProgramParams: {any} \n", .{programParams});
-    std.debug.print("Paths: {any} \n", .{programParams.paths});
-    std.debug.print("Options: {any} \n", .{programParams.options});
-    std.debug.print("Ignore: {any} \n", .{programParams.ignore});
-    std.debug.print("Help: {any} \n", .{programParams.help});
-    std.debug.print("Version: {any} \n", .{programParams.version});
+    // READ git-add.conf file
+    const file = try std.fs.cwd().openFile(CONF_FILE_PATH, .{});
+    defer file.close();
+
+    var read_buffer: [1024]u8 = undefined;
+    var file_reader = file.reader(&read_buffer);
+    var parser = ini.parse(gpa.allocator(), &file_reader.interface, ";#");
+    defer parser.deinit();
 
     // Prints if program works.
     // Prints to stderr, ignoring potential errors.

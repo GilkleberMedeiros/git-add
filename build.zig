@@ -26,6 +26,10 @@ pub fn build(b: *std.Build) void {
         .url = "https://github.com/Hejsil/zig-clap/archive/refs/tags/0.11.0.tar.gz",
         .hash = "clap-0.11.0-oBajB-HnAQDPCKYzwF7rO3qDFwRcD39Q0DALlTSz5H7e",
     });
+    const ini_dep = b.dependency("ini", .{
+        .url = "git+https://github.com/ziglibs/ini#918f16d0dcf893d0c1cdffe204faa08bb3584e04",
+        .hash = "ini-0.1.0-YCQ9Ys0pAABixEvvQvhVXAdqRE3wrZk_wiL9TPNHhB8d",
+    });
 
     // This creates a module, which represents a collection of source files alongside
     // some compilation options, such as optimization mode and linked system libraries.
@@ -86,6 +90,7 @@ pub fn build(b: *std.Build) void {
                 // can be extremely useful in case of collisions (which can happen
                 // importing modules from different packages).
                 .{ .name = "clap", .module = clap_dep.module("clap") },
+                .{ .name = "ini", .module = ini_dep.module("ini") },
             },
         }),
     });
